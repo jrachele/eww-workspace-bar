@@ -9,8 +9,13 @@ And returns a JSON list of text for each workspace, usually a Nerd font icon
 import re
 import json
 import subprocess
-import argparse
 
+# EDIT THIS FOR YOUR OWN ICONS
+# To find process name, you can use
+# ps aux | grep <process>
+# Then truncate the process down to 15 charactes
+# ex:
+# /bin/plasma-systemmonitor => plasma-systemmo
 icon_map = {
         "firefox": "",
         "kitty": "",
@@ -21,28 +26,16 @@ icon_map = {
         "default": ""
 }
 
+
+# Implementation
 windows_pattern = r" (\d+) (\d+)\s"
 desktop_pattern = r"(\d+)\s+\*"
 
 
 def main():
-    parser = argparse.ArgumentParser(
-                        prog='Parse Workspaces',
-                        description='Utils for parsing wmctrl workspaces')
-
-    group = parser.add_mutually_exclusive_group()
-    group.required = True
-    group.add_argument('-c', '--current', action='store_true', help="Get current workspace index")
-    group.add_argument('-i', '--icon', help="Get icon at workspace index")
-    group.add_argument('-l', '--list', action='store_true', help="Get list of icons at workspace index")
-
-    args = parser.parse_args()
     result = subprocess.run(["wmctrl", "-d"], capture_output=True)
     desktops_raw = result.stdout
     current_workspace = int(re.search(desktop_pattern, str(desktops_raw)).group(1))
-    if args.current:
-        print(current_workspace)
-        return
 
     result = subprocess.run(["wmctrl", "-l", '-p'], capture_output=True)
     windows_raw = result.stdout
@@ -62,13 +55,12 @@ def main():
             icon = icon_map["no-icon"]
 
         if workspace in icons:
-            # Append the icon to the list
-            # TODO make this optional
             icons[workspace]["icons"].append(icon)
         else:
             icons[workspace] = {
                 "icons": [icon],
                 "workspace": workspace,
+                "process": processname,
                 "current": True if current_workspace == workspace else False
             }
 
@@ -76,17 +68,11 @@ def main():
         icons[current_workspace] = {
             "icons": [icon_map["default"]],
             "workspace": current_workspace,
+            "processname": "<empty>",
             "current": True
         }
 
-    if args.icon:
-        selected_icon = int(args.icon)
-        if selected_icon not in icons:
-            print(json.dumps([icon_map["default"]]).replace("\\", "\\\\"))
-        else:
-            print(json.dumps(icons[selected_icon]["icons"]).replace("\\", "\\\\"))
-        return
-
+    # This is a bit expensive, but there are only a few elements anyway
     print(json.dumps([icons[i] for i in sorted(icons.keys())]).replace("\\", "\\\\"))
 
 

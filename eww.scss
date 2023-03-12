@@ -1,0 +1,21 @@
+* {
+  all: unset; //Unsets everything so you can style everything from scratch
+}
+
+window {
+    background-color: transparent;
+}
+
+.not-selected {
+    font-size: 15px;
+    color: #aaaaaa;
+}
+
+.selected {
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.icon {
+  font-family: FiraCode Nerd Font;
+}

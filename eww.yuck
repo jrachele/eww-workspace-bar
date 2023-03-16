@@ -28,6 +28,7 @@
 (defvar batterywidget-hover false)
 (defvar volumewidget-hover false)
 (defvar statswidget-hover false)
+(defvar netwidget-hover false)
 
 (defwidget timewidget []
     (hoverwidget
@@ -64,11 +65,15 @@
      :text "  ${EWW_TEMPS['CORETEMP_PACKAGE_ID_0']}°  "))
 
 (defwidget netwidget []
-    (label
-     :width 150
-     :class "net"
-     ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
-     :text "   ${EWW_NET['wlp2s0']['NET_UP']} B  ${EWW_NET['wlp2s0']['NET_DOWN']} B "))
+    (hoverwidget
+        :class "net"
+        :hover-var "netwidget-hover"
+        :hover-cond netwidget-hover
+        (label :text "")
+        (label
+            ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
+            :style "padding-left: 5px; padding-right: 5px;"
+            :text "${EWW_NET['wlp2s0']['NET_UP']} B  ${EWW_NET['wlp2s0']['NET_DOWN']} B ")))
 
 (defwidget statswidget []
     (hoverwidget

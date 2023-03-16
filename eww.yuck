@@ -1,62 +1,175 @@
-;; Configuration
-;; for further configuration see scripts/parse_workspaces.py
-;; where you can set your icons
+(include "./workspaces.yuck")
 
-;; Enables process name preview on selected workspace
-(defvar enable_process_name false)
+(defpoll timestr
+  :interval "1s"
+  :initial-value ""
+  "date '+%H:%M'")
 
-;; Shows the workspace number beside the icon
-(defvar enable_workspace_number true)
+(defpoll datestr
+  :interval "1m"
+  :initial-value ""
+  "date '+%A %B %d'")
 
-;; Enables multiple icon previews per workspace
-(defvar enable_multiple_icons true)
+(defpoll batterystr
+  :interval "1m"
+  :initial-value ""
+  "scripts/battery.py -c")
 
-;; Implementation
-(defpoll workspace_str
-    :interval "0.1s"
-    :initial_value "[]"
-    "$HOME/.config/eww/scripts/parse_workspaces.py")
+(defpoll batterystatus
+  :interval "5s"
+  :initial-value ""
+  "scripts/battery.py -s")
 
-(defwidget workspaces []
-    (box
-        :spacing 16
-        :halign "center"
-        :orientation "h"
-        :space-evenly false
-        :valign "center"
-        (for workspace in workspace_str
-            (eventbox
-                :cursor "pointer"
-                :onclick "wmctrl -s ${workspace.workspace}"
-                (box
-                    :spacing 10
-                    :space-evenly false
-                    :hexpand false
-                    :vexpand false
-                    :halign "center"
-                    :valign "center"
-                    :class "${workspace.current ? 'selected' : 'not-selected'}"
-                    (for icon in
-                        "${enable_multiple_icons ? '${jq(workspace, '.icons')}' : '[${jq(workspace, '.icons[0]')}]'}"
-                        (label
-                            :class "icon"
-                            :text icon))
-                    (label
-                        :class "number"
-                        :text "${enable_workspace_number ? '${workspace.workspace + 1}' : ''}")
-                    (label
-                        :class "process"
-                        :text "${enable_process_name && workspace.current ? ' - ${workspace.process}' : ''}"))))))
+(defpoll volume
+  :interval "1s"
+  "amixer -D pipewire sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }' | tr -d '%' | head -1")
 
-(defwindow workspaces
+(defvar timewidget-hover false)
+(defvar batterywidget-hover false)
+(defvar volumewidget-hover false)
+(defvar statswidget-hover false)
+
+(defwidget timewidget []
+    (hoverwidget
+        :class "time"
+        :hover-var "timewidget-hover"
+        :hover-cond timewidget-hover
+        (label :text "${timestr}")
+        (label :text "  ${datestr}")))
+
+(defwidget batterywidget []
+    (hoverwidget
+        :class "battery"
+        :hover-var "batterywidget-hover"
+        :hover-cond batterywidget-hover
+        (label :text "${batterystr}")
+        (label
+         :style "padding-left: 5px;"
+         :text "${batterystatus}")))
+
+(defwidget ramwidget []
+    (label
+     :class "ram"
+     :text "   ${round(EWW_RAM.used_mem_perc, 1)}%  "))
+
+(defwidget cpuwidget []
+    (label
+     :class "cpu"
+     :text "   ${round(EWW_CPU.avg, 1)}%  "))
+
+(defwidget tempwidget []
+    (label
+     :class "temp"
+     ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
+     :text "  ${EWW_TEMPS['CORETEMP_PACKAGE_ID_0']}°  "))
+
+(defwidget netwidget []
+    (label
+     :width 150
+     :class "net"
+     ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
+     :text "   ${EWW_NET['wlp2s0']['NET_UP']} B  ${EWW_NET['wlp2s0']['NET_DOWN']} B "))
+
+(defwidget statswidget []
+    (hoverwidget
+        :class "stats"
+        :hover-var "statswidget-hover"
+        :hover-cond statswidget-hover
+        (tempwidget)
+        (box
+         :orientation "h"
+         :space-evenly false
+         (cpuwidget)
+         (ramwidget))))
+
+(defwidget volumewidget []
+    (metric
+        :class "volume"
+        :label " ${volume}"
+        :value "${volume}"
+        :onchange "amixer -D pipewire sset Master {}%"))
+
+(defwidget metric [class label value onchange]
+  (box :orientation "h"
+       :class "metric ${class}"
+       :space-evenly false
+    (box :class "label" label)
+    (scale :min 0
+           :max 101
+           :active {onchange != ""}
+           :value value
+           :onchange onchange)))
+
+(defwidget hoverwidget [class hover-var hover-cond]
+    (eventbox
+        :onhover "${EWW_EXECUTABLE} update ${hover-var}=true"
+        :onhoverlost "${EWW_EXECUTABLE} update ${hover-var}=false"
+        (box
+            :class "hover-widget ${class}"
+            :orientation "h"
+            :halign "end"
+            :height 30
+            :space-evenly false
+            :spacing 5
+            (revealer
+                :reveal hover-cond
+                :transition "slideleft"
+                (children :nth 1))
+            (children :nth 0))))
+
+(defwidget barcontent []
+    (centerbox
+        (bar-left)
+        (bar-center)
+        (bar-right)))
+
+(defwidget bar-left []
+  (box
+    :class "bar-left"
+    (workspaces)))
+
+(defwidget bar-center []
+  (box
+    :class "bar-center"
+    ""))
+
+(defwidget bar-right []
+  (box
+   :valign "center"
+   :space-evenly false
+   :halign "end"
+    :class "bar-right"
+   (volumewidget)
+   (netwidget)
+   (statswidget)
+   (batterywidget)
+   (timewidget)))
+
+
+(defwindow bar
     :monitor 0
     :geometry (geometry :x "0%"
                         :y "10px"
-                        :width "35%"
-                        :height "35px"
+                        :width "95%"
+                        :height "30px"
                         :anchor "top center")
     :stacking "fg"
     :reserve (struts :distance "40px" :side "top")
     :windowtype "dock"
-    :wm-ignore true
-    (workspaces))
+    :wm-ignore false
+    :focusable false
+    (barcontent))
+
+;; Use this window for a non-eww bar
+;; (defwindow workspaceoverlay
+;;     :monitor 0
+;;     :geometry (geometry :x "0%"
+;;                         :y "10px"
+;;                         :width "35%"
+;;                         :height "30px"
+;;                         :anchor "top center")
+;;     :stacking "fg"
+;;     :reserve (struts :distance "40px" :side "top")
+;;     :windowtype "dock"
+;;     :wm-ignore true
+;;     (workspaces))

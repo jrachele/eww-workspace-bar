@@ -1,19 +1,132 @@
+// Catppuccin
+$rosewater: #f4dbd6;
+$flamingo: #f0c6c6;
+$pink: #f5bde6;
+$mauve: #c6a0f6;
+$red: #ed8796;
+$maroon: #ee99a0;
+$peach: #f5a97f;
+$yellow: #eed49f;
+$green: #a6da95;
+$teal: #8bd5ca;
+$sky: #91d7e3;
+$sapphire: #7dc4e4;
+$blue: #8aadf4;
+$lavender: #b7bdf8;
+$text: #cad3f5;
+$subtext1: #b8c0e0;
+$subtext0: #a5adcb;
+$overlay2: #939ab7;
+$overlay1: #8087a2;
+$overlay0: #6e738d;
+$surface2: #5b6078;
+$surface1: #494d64;
+$surface0: #363a4f;
+$base: #24273a;
+$mantle: #1e2030;
+$crust: #181926;
+
 * {
   all: unset; //Unsets everything so you can style everything from scratch
+  font-size: 15px;
+  font-family: Inter, FiraCode Nerd Font;
 }
 
-window {
+.bar {
+  border-radius: 30px;
+  background-color: $mantle;
+  color: $subtext1;
+}
+
+.workspaceoverlay {
     background-color: transparent;
 }
 
-.not-selected {
-    font-size: 15px;
-    color: #aaaaaa;
+// .hover-widget {
+//   padding-right: 5px;
+//   padding-left: 5px;
+// }
+
+scale > contents > trough {
+  background-color: $surface2;
+  border-radius: 50px;
+  min-height: 3px;
+  // max-height: 8px;
+  min-width: 75px;
+  margin-left: 10px;
+  margin-right: 20px;
+}
+
+scale > contents > trough > slider {
+  background-color: $text;
+  border-radius: 50px;
+  min-height: 15px;
+  min-width: 15px;
+}
+
+.time {
+  background-color: $blue;
+  color: $mantle;
+  border-bottom-right-radius: 30px;
+  border-top-right-radius: 30px;
+  padding-left: 5px;
+  padding-right: 10px;
+}
+
+.battery {
+  background-color: $pink;
+  color: $mantle;
+  padding-right: 8px;
+  padding-left: 5px;
+}
+
+.ram {
+  background-color: $rosewater;
+  color: $mantle;
+  padding-left: 8px;
+}
+
+.cpu {
+  background-color: $flamingo;
+  color: $mantle;
+  padding-left: 8px;
+}
+
+.temp {
+  background-color: $yellow;
+  color: $mantle;
+  padding-left: 5px;
+}
+
+.net {
+  background-color: $green;
+  border-top-left-radius: 30px;
+  border-bottom-left-radius: 30px;
+  color: $mantle;
+  padding-left: 5px;
+}
+
+.stats {
+  background-color: $yellow;
+}
+
+.volume {
+  padding-left: 10px;
+  // background-color: $crust;
+  border-top-left-radius: 30px;
+  border-bottom-left-radius: 30px;
+}
+
+.workspaces {
+  padding-left: 15px;
+}
+
+.bold {
+  font-weight: bold;
 }
 
 .selected {
-    font-size: 16px;
-    color: #ffffff;
+  color: $text;
 }
 
 .selected .number {
@@ -22,9 +135,5 @@ window {
 
 .process {
     font-style: oblique;
-}
-
-.icon {
-  font-family: FiraCode Nerd Font;
 }
 

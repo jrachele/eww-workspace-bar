@@ -12,10 +12,9 @@
 (defvar enable_multiple_icons true)
 
 ;; Implementation
-(defpoll workspace_str
-    :interval "0.1s"
-    :initial_value "[]"
-    "$HOME/.config/eww/scripts/parse_workspaces.py")
+(deflisten workspace_str
+    :initial_value "{}"
+    "$HOME/.config/eww/scripts/parse_workspaces_hyprland.py")
 
 (defwidget workspaces []
     (box
@@ -24,10 +23,10 @@
         :orientation "h"
         :space-evenly false
         :valign "center"
-        (for workspace in workspace_str
+        (for workspace in "${workspace_str['icons']}"
             (eventbox
                 :cursor "pointer"
-                :onclick "wmctrl -s ${workspace.workspace}"
+                :onclick "hyprctl dispatch workspace ${workspace.workspace}"
                 (box
                     :spacing 10
                     :space-evenly false
@@ -37,13 +36,13 @@
                     :valign "center"
                     :class "${workspace.current ? 'selected' : 'not-selected'}"
                     (for icon in
-                        "${enable_multiple_icons ? '${jq(workspace, '.icons')}' : '[${jq(workspace, '.icons[0]')}]'}"
+                        "${enable_multiple_icons ? '${workspace['icons']}' : '[${jq(workspace, '.icons[0]')}]'}"
                         (label
                             :class "icon"
-                            :text icon))
+                            :text "${icon}"))
                     (label
                         :class "number"
-                        :text "${enable_workspace_number ? '${workspace.workspace + 1}' : ''}")
+                        :text "${enable_workspace_number ? '${workspace.workspace}' : ''}")
                     (label
                         :class "process"
                         :text "${enable_process_name && workspace.current ? ' - ${workspace.process}' : ''}"))))))

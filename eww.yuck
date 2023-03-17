@@ -1,5 +1,10 @@
 (include "./workspaces.yuck")
 
+(defwidget titlewidget []
+    (label
+     :class "title"
+     :text "${workspace_str['title']}"))
+
 (defpoll timestr
   :interval "1s"
   :initial-value ""
@@ -136,7 +141,7 @@
 (defwidget bar-center []
   (box
     :class "bar-center"
-    ""))
+    (titlewidget)))
 
 (defwidget bar-right []
   (box
@@ -163,6 +168,7 @@
     :windowtype "dock"
     :wm-ignore false
     :focusable false
+    :exclusive true
     (barcontent))
 
 ;; Use this window for a non-eww bar

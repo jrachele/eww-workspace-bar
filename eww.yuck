@@ -25,9 +25,15 @@
   :initial-value ""
   "scripts/battery.py -s")
 
+(defpoll connected-ssid
+  :interval "30s"
+  :initial-value ""
+  "iwgetid -r")
+
+
 (defpoll volume
   :interval "1s"
-  "amixer -D pipewire sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }' | tr -d '%' | head -1")
+  "pamixer --get-volume")
 
 (defvar timewidget-hover false)
 (defvar batterywidget-hover false)
@@ -74,30 +80,30 @@
         :class "net"
         :hover-var "netwidget-hover"
         :hover-cond netwidget-hover
-        (label :text "")
+        (label :text " ${connected-ssid}")
         (label
-            ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
+            ;; :text "   ${round(EWW_NET.wlan0.up, 1)}%  "))
             :style "padding-left: 5px; padding-right: 5px;"
-            :text "${EWW_NET['wlp2s0']['NET_UP']} B  ${EWW_NET['wlp2s0']['NET_DOWN']} B ")))
+            :text "${EWW_NET['wlan0']['NET_UP']} B  ${EWW_NET['wlan0']['NET_DOWN']} B ")))
 
 (defwidget statswidget []
-    (hoverwidget
-        :class "stats"
-        :hover-var "statswidget-hover"
-        :hover-cond statswidget-hover
-        (tempwidget)
-        (box
-         :orientation "h"
-         :space-evenly false
-         (cpuwidget)
-         (ramwidget))))
+  (hoverwidget
+    :class "stats"
+    :hover-var "statswidget-hover"
+    :hover-cond statswidget-hover
+    (cpuwidget)
+    (box
+      :orientation "h"
+      :space-evenly false
+      (ramwidget)
+      (tempwidget))))
 
 (defwidget volumewidget []
     (metric
         :class "volume"
         :label " ${volume}"
-        :value "${volume}"
-        :onchange "amixer -D pipewire sset Master {}%"))
+        :value "${volume}%"
+        :onchange "pamixer --set-volume {}"))
 
 (defwidget metric [class label value onchange]
   (box :orientation "h"

@@ -1,9 +1,12 @@
 # eww-workspace-bar
 Workspace overlay written for Eww
 
-Currently only works on X11 due to use of wmctrl
+Works on X11 using wmctrl (view pre-Hyprland commits if you have issues)
+
+Works on Hyprland using hyprctl (includes entire bar)
 
 Shows an icon preview of workspaces like many bars, but is dynamic and based on the windows on particular workspaces.
+
 Also supports multiple icons, 1 for each window.
 
 ![Preview with latte-dock](https://user-images.githubusercontent.com/23142073/224539013-6e5a7d8e-d9dc-4ebd-9564-d411e0278b42.png)

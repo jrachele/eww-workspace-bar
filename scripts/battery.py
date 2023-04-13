@@ -33,7 +33,7 @@ def main():
         result = subprocess.run(["cat", "/sys/class/power_supply/BAT0/status"], capture_output=True)
         status = str(result.stdout)[2:-3]
         icon = charge_icons[0] if status == "Charging" else charge_icons[1]
-        print(f"{icon}   {status} ")
+        print(f"{icon}  {status} ")
         exit(0)
 
     print("Usage: battery.py [-c | -s]")

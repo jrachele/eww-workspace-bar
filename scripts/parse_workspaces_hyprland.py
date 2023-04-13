@@ -7,22 +7,6 @@ Goes through all workspaces with windows using hyprctrl
 And returns a JSON list of text for each workspace, usually a Nerd font icon
 """
 
-# EDIT THIS FOR YOUR OWN ICONS
-# To find process name, you can use
-# ps aux | grep <process>
-# Then truncate the process down to 15 charactes
-# ex:
-# /bin/plasma-systemmonitor => plasma-systemmo
-icon_map = {
-        "firefox": "",
-        "kitty": "",
-        "emacs": "",
-        "dolphin": "",
-        "plasma-systemmo": "",
-        "no-icon": "",
-        "default": ""
-}
-
 import re
 import json
 import subprocess
@@ -32,12 +16,25 @@ import os, os.path
 import time
 from collections import deque
 
+# EDIT THIS FILE FOR YOUR OWN ICONS
+# To find process name, you can use
+# ps aux | grep <process>
+# Then truncate the process down to 15 charactes
+# ex:
+# /bin/plasma-systemmonitor => plasma-systemmo
+# 
+# This will also match on the first word of window titles
+icon_map_path = "/home/juge/.config/eww/scripts/workspaces_map.json"
+
 HYPRLAND_INSTANCE_SIGNATURE = os.getenv('HYPRLAND_INSTANCE_SIGNATURE')
 SOCKET_PATH = f"/tmp/hypr/{HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 
 def main():
+    with open(icon_map_path, "r") as icon_map_buf:
+        icon_map = json.loads(icon_map_buf.read())
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as socket_client:
         socket_client.connect(SOCKET_PATH)
+
         while True:
             # For now, do nothing about the actual content, and simply use it to refresh
             monitor_str = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True)
@@ -48,6 +45,8 @@ def main():
             activewindow_json = json.loads(activewindow_str.stdout)
             if 'title' in activewindow_json:
                 current_window_title = activewindow_json['title']
+                if len(current_window_title) > 100:
+                    current_window_title = current_window_title[:50] + "..." + current_window_title[-50:]
             else:
                 current_window_title = ""
 
@@ -58,8 +57,17 @@ def main():
             for client in clients_json:
                 workspace = int(client['workspace']['id'])
                 processname = client['class']
+                win_title = client['title']
 
-                if processname in icon_map:
+                if processname == "":
+                    continue
+
+                # First match on window title
+                win_title = win_title.split(" ")[0]
+                
+                if win_title in icon_map:
+                    icon = icon_map[win_title]
+                elif processname in icon_map:
                     icon = icon_map[processname]
                 else:
                     icon = icon_map['no-icon']

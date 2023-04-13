@@ -1,9 +1,4 @@
-(include "./workspaces.yuck")
-
-(defwidget titlewidget []
-    (label
-     :class "title"
-     :text "${workspace_str['title']}"))
+(include "./workspaces_bspwm.yuck")
 
 (defpoll timestr
   :interval "1s"
@@ -15,74 +10,76 @@
   :initial-value ""
   "date '+%A %B %d'")
 
-(defpoll batterystr
-  :interval "1m"
+(defpoll titlestr
+  :interval "0.1s"
   :initial-value ""
-  "scripts/battery.py -c")
+  "xdotool getwindowfocus getwindowname")
 
-(defpoll batterystatus
-  :interval "5s"
-  :initial-value ""
-  "scripts/battery.py -s")
+;; (defpoll batterystr
+;;   :interval "1m"
+;;   :initial-value ""
+;;   "scripts/battery.py -c")
+
+;; (defpoll batterystatus
+;;   :interval "5s"
+;;   :initial-value ""
+;;   "scripts/battery.py -s")
 
 (defpoll volume
-  :interval "1s"
-  "amixer -D pipewire sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }' | tr -d '%' | head -1")
+  :interval "0.05s"
+  "pactl get-sink-volume @DEFAULT_SINK@ | grep '%' | cut -d '/' -f 2 | cut -d '%' -f 1 | tr -d ' '")
+
+(defpoll ssid
+  :interval "10s"
+  "iwgetid -r")
 
 (defvar timewidget-hover false)
-(defvar batterywidget-hover false)
+;; (defvar batterywidget-hover false)
 (defvar volumewidget-hover false)
 (defvar statswidget-hover false)
 (defvar netwidget-hover false)
 
-(defwidget timewidget []
-    (hoverwidget
-        :class "time"
-        :hover-var "timewidget-hover"
-        :hover-cond timewidget-hover
-        (label :text "${timestr}")
-        (label :text "  ${datestr}")))
-
-(defwidget batterywidget []
-    (hoverwidget
-        :class "battery"
-        :hover-var "batterywidget-hover"
-        :hover-cond batterywidget-hover
-        (label :text "${batterystr}")
-        (label
-         :style "padding-left: 5px;"
-         :text "${batterystatus}")))
+(defwidget titlewidget []
+    (label
+     :style "${titlestr == '' ? 'background-color: transparent;' : ''}"
+     :class "title"
+     :text "${titlestr}"))
 
 (defwidget ramwidget []
     (label
-     :class "ram"
+     :class "hidden"
      :text "   ${round(EWW_RAM.used_mem_perc, 1)}%  "))
 
 (defwidget cpuwidget []
     (label
-     :class "cpu"
+     :class "hidden"
      :text "   ${round(EWW_CPU.avg, 1)}%  "))
 
 (defwidget tempwidget []
     (label
-     :class "temp"
+     :class "temp shown"
      ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
-     :text "  ${EWW_TEMPS['CORETEMP_PACKAGE_ID_0']}°  "))
+     :text "  ${EWW_TEMPS['ASUS_WMI_SENSORS_CHIPSET_TEMPERATURE']}°"))
 
 (defwidget netwidget []
     (hoverwidget
         :class "net"
+        :onclick "nm-connection-editor &"
         :hover-var "netwidget-hover"
         :hover-cond netwidget-hover
-        (label :text "")
         (label
+         :class "net shown"
+         :text "${strlength(ssid) == 0 ? 'No Connection' : '   ${ssid}'}")
+        (label
+            :class "net hidden"
             ;; :text "   ${round(EWW_NET.wlp2s0.up, 1)}%  "))
-            :style "padding-left: 5px; padding-right: 5px;"
-            :text "${EWW_NET['wlp2s0']['NET_UP']} B  ${EWW_NET['wlp2s0']['NET_DOWN']} B ")))
+            ;; :style "padding-left: 5px; padding-right: 5px;"
+            :text "${EWW_NET['wlp6s0']['NET_UP']} B  ${EWW_NET['wlp6s0']['NET_DOWN']} B ")))
 
 (defwidget statswidget []
     (hoverwidget
         :class "stats"
+        :onclick "kitty btm &"
         :hover-var "statswidget-hover"
         :hover-cond statswidget-hover
         (tempwidget)
@@ -93,13 +90,45 @@
          (ramwidget))))
 
 (defwidget volumewidget []
-    (metric
+    (hoverwidgetright
         :class "volume"
-        :label " ${volume}"
-        :value "${volume}"
-        :onchange "amixer -D pipewire sset Master {}%"))
+        :hover-var "volumewidget-hover"
+        :hover-cond volumewidget-hover
+        (label
+         :class "shown"
+         :text " ${volume}")
+        (metric
+            :class "hidden"
+            :label ""
+            :value "${volume}"
+            :onchange "pactl set-sink-volume @DEFAULT_SINK@ {}%")))
 
-(defwidget metric [class label value onchange]
+;; (defwidget batterywidget []
+;;     (hoverwidget
+;;         :class "battery"
+;;         :hover-var "batterywidget-hover"
+;;         :hover-cond batterywidget-hover
+;;         (label
+;;          :class "shown"
+;;          :text "${batterystr}")
+;;         (label
+;;          :class "hidden"
+;;          :style "padding-left: 5px; padding-right: 5px;"
+;;          :text "${batterystatus}")))
+
+(defwidget timewidget []
+    (hoverwidget
+        :class "time"
+        :hover-var "timewidget-hover"
+        :hover-cond timewidget-hover
+        (label
+         :class "shown"
+         :text "${timestr}")
+        (label
+         :class "hidden"
+         :text "  ${datestr}")))
+
+(defwidget metric [?class label value onchange]
   (box :orientation "h"
        :class "metric ${class}"
        :space-evenly false
@@ -110,15 +139,16 @@
            :value value
            :onchange onchange)))
 
-(defwidget hoverwidget [class hover-var hover-cond]
+(defwidget hoverwidget [?class ?onclick hover-var hover-cond]
     (eventbox
+        :onclick onclick
         :onhover "${EWW_EXECUTABLE} update ${hover-var}=true"
         :onhoverlost "${EWW_EXECUTABLE} update ${hover-var}=false"
         (box
             :class "hover-widget ${class}"
             :orientation "h"
             :halign "end"
-            :height 30
+            :height 26
             :space-evenly false
             :spacing 5
             (revealer
@@ -126,6 +156,24 @@
                 :transition "slideleft"
                 (children :nth 1))
             (children :nth 0))))
+
+(defwidget hoverwidgetright [?class ?onclick hover-var hover-cond]
+    (eventbox
+        :onclick onclick
+        :onhover "${EWW_EXECUTABLE} update ${hover-var}=true"
+        :onhoverlost "${EWW_EXECUTABLE} update ${hover-var}=false"
+        (box
+            :class "hover-widget ${class}"
+            :orientation "h"
+            :halign "end"
+            :height 26
+            :space-evenly false
+            :spacing 5
+            (children :nth 0)
+            (revealer
+                :reveal hover-cond
+                :transition "slideright"
+                (children :nth 1)))))
 
 (defwidget barcontent []
     (centerbox
@@ -136,6 +184,8 @@
 (defwidget bar-left []
   (box
     :class "bar-left"
+    :halign "start"
+    :space-evenly false
     (workspaces)))
 
 (defwidget bar-center []
@@ -148,23 +198,24 @@
    :valign "center"
    :space-evenly false
    :halign "end"
-    :class "bar-right"
-   (volumewidget)
+   :class "bar-right"
    (netwidget)
+   ;; (systray :pack-direction "rtl")
    (statswidget)
-   (batterywidget)
+   (volumewidget)
+   ;; (batterywidget)
    (timewidget)))
 
 
 (defwindow bar
     :monitor 0
     :geometry (geometry :x "0%"
-                        :y "10px"
-                        :width "95%"
-                        :height "30px"
+                        :y "8px"
+                        :width "98%"
+                        :height "26px"
                         :anchor "top center")
     :stacking "fg"
-    :reserve (struts :distance "40px" :side "top")
+    ;; :reserve (struts :distance "10px" :side "top")
     :windowtype "dock"
     :wm-ignore false
     :focusable false
@@ -177,7 +228,7 @@
 ;;     :geometry (geometry :x "0%"
 ;;                         :y "10px"
 ;;                         :width "35%"
-;;                         :height "30px"
+;;                         :height "26px"
 ;;                         :anchor "top center")
 ;;     :stacking "fg"
 ;;     :reserve (struts :distance "40px" :side "top")

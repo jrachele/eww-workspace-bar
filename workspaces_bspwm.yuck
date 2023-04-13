@@ -1,0 +1,48 @@
+;; Configuration
+;; for further configuration see scripts/parse_workspaces.py
+;; where you can set your icons
+
+;; Shows the workspace number beside the icon
+(defvar enable_workspace_number true)
+
+;; Enables multiple icon previews per workspace
+(defvar enable_multiple_icons true)
+
+;; Implementation
+(defpoll workspace_str
+    :initial_value "[]"
+    :interval "0.1s"
+    "$HOME/.config/eww/scripts/parse_workspaces_bspwm.py")
+
+(defwidget workspaces []
+    (box
+        :class "workspaces"
+        :spacing 16
+        :orientation "h"
+        :space-evenly false
+        :valign "center"
+        (for monitor in "${workspace_str}"
+            (box
+                :spacing 10
+                :space-evenly false
+                :class "workspace-${monitor['name']}"
+                (for workspace in "${monitor['icons']}"
+                    (eventbox
+                        :cursor "pointer"
+                        :onclick "bspc desktop -f ${workspace.workspace}"
+                        (box
+                            :spacing 10
+                            :space-evenly false
+                            :hexpand false
+                            :vexpand false
+                            :halign "center"
+                            :valign "center"
+                            :class "${workspace.current ? 'selected' : 'not-selected'}"
+                            (for icon in
+                                "${enable_multiple_icons ? '${workspace['icons']}' : '[${jq(workspace, '.icons[0]')}]'}"
+                                (label
+                                    :class "icon"
+                                    :text "${icon}"))
+                            (label
+                                :class "number"
+                                :text "${enable_workspace_number ? '${workspace.workspace}' : ''}"))))))))

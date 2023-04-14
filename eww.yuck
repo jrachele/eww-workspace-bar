@@ -10,11 +10,6 @@
   :initial-value ""
   "date '+%A %B %d'")
 
-(defpoll titlestr
-  :interval "0.1s"
-  :initial-value ""
-  "xdotool getwindowfocus getwindowname")
-
 ;; (defpoll batterystr
 ;;   :interval "1m"
 ;;   :initial-value ""
@@ -41,9 +36,9 @@
 
 (defwidget titlewidget []
     (label
-     :style "${titlestr == '' ? 'background-color: transparent;' : ''}"
+     :style "${workspace_str[0]['title'] == '' ? 'background-color: transparent;' : ''}"
      :class "title"
-     :text "${titlestr}"))
+     :text "${workspace_str[0]['title']}"))
 
 (defwidget ramwidget []
     (label
@@ -216,10 +211,10 @@
                         :anchor "top center")
     :stacking "fg"
     ;; :reserve (struts :distance "10px" :side "top")
-    :windowtype "dock"
+    ;; :windowtype "dock"
     :wm-ignore false
     :focusable false
-    :exclusive true
+    :exclusive false
     (barcontent))
 
 ;; Use this window for a non-eww bar

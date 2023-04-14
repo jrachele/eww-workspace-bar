@@ -118,10 +118,12 @@ scale > contents > trough > slider {
 }
 
 .title {
-  padding-left: 10px;
-  padding-right: 10px;
-  background-color: $crust;
+  padding-left: 15px;
+  padding-right: 15px;
+  background-color: $base;
   color: $text;
+  // color: $crust;
+  // font-weight: bold;
   border-top-left-radius: 30px;
   border-bottom-left-radius: 30px;
   border-top-right-radius: 30px;
@@ -146,14 +148,14 @@ scale > contents > trough > slider {
 }
 
 .workspace-DP-2 {
-  padding-left: 10px;
+  padding-left: 15px;
   // padding-right: 5px;
   border-top-left-radius: 30px;
   border-bottom-left-radius: 30px;
 }
 .workspace-DP-4 {
   padding-left: 10px;
-  padding-right: 10px;
+  padding-right: 15px;
   // background-color: $lavender;
   // color: $base;
   background-color: $base;
@@ -170,8 +172,16 @@ scale > contents > trough > slider {
   font-weight: bold;
 }
 
+.iconbox {
+  color: $overlay1;
+}
+
 .selected {
-  color: $text;
+  color: $lavender;
+}
+
+.urgent {
+  color: $red;
 }
 
 .selected .number {

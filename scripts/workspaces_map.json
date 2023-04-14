@@ -1,15 +1,20 @@
 {
   "firefox": "",
   "kitty": "",
-  "Emacs": "",
+  "Emacs": "",
   "nvim": "",
   "dolphin": "",
   "joshuto": "",
   "btm": "",
   "Slack": "",
+  "Steam": "",
+  "Spotify": "",
   "Ripcord": "󰙯",
   "discord": "󰙯",
   "Vmware-view": "󱧐",
+  "zoom": "",
+  "Lutris": "",
+  "battle.net.exe": "",
   "no-icon": "",
   "default": ""
 }

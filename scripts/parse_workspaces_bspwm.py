@@ -28,6 +28,16 @@ icon_map_path = "/home/juge/.config/eww/scripts/workspaces_map.json"
 from pprint import pprint
 
 def main():
+    listen = subprocess.Popen(["bspc", "subscribe", "all"], stdout=subprocess.PIPE)
+    while True:
+        output = listen.stdout.readline()
+        if listen.poll() is not None:
+            break
+        if output:
+            parse_workspaces()
+
+
+def parse_workspaces():
     with open(icon_map_path, "r") as icon_map_buf:
         icon_map = json.loads(icon_map_buf.read())
 
@@ -35,6 +45,9 @@ def main():
         monitors = monitors_str.stdout.decode('UTF-8').strip().split('\n')
 
         clients = []
+        window_title_str = subprocess.run(["xdotool", "getwindowfocus", "getwindowname"], capture_output=True)
+        title = window_title_str.stdout.decode()
+
         for i, monitor_name in enumerate(monitors):
             monitor_json_str = subprocess.run(["bspc", "query", "-T", "-m", monitor_name], capture_output=True)
             monitor_json = json.loads(monitor_json_str.stdout.decode('UTF-8'))
@@ -47,6 +60,8 @@ def main():
             for desktop in monitor_json["desktops"]:
                 workspace = desktop['name']
                 local_clients = []
+
+                focused_node_id = desktop["focusedNodeId"]
 
                 if desktop['id'] == focused_desktop_id:
                     current_workspace = workspace
@@ -65,6 +80,7 @@ def main():
 
                 for client in local_clients:
                     processname = client['className']
+                    urgent = client['urgent']
 
                     if processname in icon_map:
                         icon = icon_map[processname]
@@ -78,87 +94,30 @@ def main():
                             "icons": [icon],
                             "workspace": workspace,
                             "process": processname,
-                            "current": True if current_workspace == workspace else False
+                            "current": True if current_workspace == workspace else False,
+                            "urgent": False
                         }
+
+                    icons[workspace]["urgent"] |= urgent
+
+
                 if current_workspace is not None and current_workspace not in icons:
                     icons[current_workspace] = {
                         "icons": [icon_map["default"]],
                         "workspace": current_workspace,
                         "processname": "<empty>",
-                        "current": True
+                        "current": True,
+                        "urgent": False,
                     }
 
 
             clients[i] = {
                 "name": monitor_name,
+                "title": title,
                 "icons": [icons[i] for i in sorted(icons.keys())],
             }
 
-
-
-        # print({"json": clients})
         print(json.dumps(clients), flush=True)
-
-
-
-
-        # current_workspace = int(monitor_json[0]['activeWorkspace']['id'])
-
-        # activewindow_str = subprocess.run(["hyprctl", "activewindow", "-j"], capture_output=True)
-        # activewindow_json = json.loads(activewindow_str.stdout)
-        # if 'title' in activewindow_json:
-        #     current_window_title = activewindow_json['title']
-        #     if len(current_window_title) > 100:
-        #         current_window_title = current_window_title[:50] + "..." + current_window_title[-50:]
-        # else:
-        #     current_window_title = ""
-
-        # clients_str = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True).stdout
-        # clients_json = json.loads(clients_str)
-
-        # icons = {}
-        # for client in clients_json:
-        #     workspace = int(client['workspace']['id'])
-        #     processname = client['class']
-        #     win_title = client['title']
-
-        #     if processname == "":
-        #         continue
-
-        #     # First match on window title
-        #     win_title = win_title.split(" ")[0]
-
-        #     if win_title in icon_map:
-        #         icon = icon_map[win_title]
-        #     elif processname in icon_map:
-        #         icon = icon_map[processname]
-        #     else:
-        #         icon = icon_map['no-icon']
-
-        #     if workspace in icons:
-        #         icons[workspace]["icons"].append(icon)
-        #     else:
-        #         icons[workspace] = {
-        #             "icons": [icon],
-        #             "workspace": workspace,
-        #             "process": processname,
-        #             "current": True if current_workspace == workspace else False
-        #         }
-        # if current_workspace not in icons:
-        #     icons[current_workspace] = {
-        #         "icons": [icon_map["default"]],
-        #         "workspace": current_workspace,
-        #         "processname": "<empty>",
-        #         "current": True
-        #     }
-
-        # payload = {
-        #     "title": current_window_title,
-        #     "icons": [icons[i] for i in sorted(icons.keys())]
-        # }
-
-        # # This is a bit expensive, but there are only a few elements anyway
-        # print(json.dumps(payload), flush=True)
 
 if __name__ == "__main__":
     main()

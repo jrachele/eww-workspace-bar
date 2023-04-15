@@ -36,8 +36,8 @@
 
 (defwidget titlewidget []
     (label
-     :style "${workspace_str[0]['title'] == '' ? 'background-color: transparent;' : ''}"
      :class "title"
+     :style "${workspace_str[0]['title'] == '' ? 'background-color: transparent;' : '' }"
      :text "${workspace_str[0]['title']}"))
 
 (defwidget ramwidget []
@@ -89,6 +89,7 @@
         :class "volume"
         :hover-var "volumewidget-hover"
         :hover-cond volumewidget-hover
+        :onclick "pavucontrol-qt&"
         (label
          :class "shown"
          :text " ${volume}")
@@ -209,12 +210,12 @@
                         :width "98%"
                         :height "26px"
                         :anchor "top center")
-    :stacking "fg"
+    :stacking "bg"
     ;; :reserve (struts :distance "10px" :side "top")
-    ;; :windowtype "dock"
-    :wm-ignore false
-    :focusable false
-    :exclusive false
+    :windowtype "desktop"
+    ;; :wm-ignore false
+    ;; :focusable false
+    ;; :exclusive false
     (barcontent))
 
 ;; Use this window for a non-eww bar

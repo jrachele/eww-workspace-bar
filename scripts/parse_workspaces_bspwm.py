@@ -3,34 +3,32 @@
 """
 parse_workspaces_bspwm.py
 
-Goes through all workspaces with windows using hyprctrl
-And returns a JSON list of text for each workspace, usually a Nerd font icon
+Goes through all workspaces with windows using bspc
+And returns a JSON list of text for each workspace, on each monitor, usually a Nerd font icon
 """
 
-import re
 import json
 import subprocess
 
-import socket
-import os, os.path
-import time
-from collections import deque
-
 # EDIT THIS FILE FOR YOUR OWN ICONS
-# To find process name, you can use
-# ps aux | grep <process>
-# Then truncate the process down to 15 charactes
-# ex:
-# /bin/plasma-systemmonitor => plasma-systemmo
-# 
-# This will also match on the first word of window titles
+#
+# To find the "key" for each of the icons
+# Run xprop | grep WM_CLASS
+# and click on the window of your choice
+# Then choose the second option
+#
+# > xprop | grep WM_CLASS
+# WM_CLASS(STRING) = "emacs", "Emacs"
+#
+# In this case my string would be "Emacs", not "emacs"
+
 icon_map_path = "/home/juge/.config/eww/scripts/workspaces_map.json"
 from pprint import pprint
 
 def main():
     listen = subprocess.Popen(["bspc", "subscribe", "all"], stdout=subprocess.PIPE)
     while True:
-        output = listen.stdout.readline()
+        output = listen.stdout.readline() if listen.stdout is not None else None
         if listen.poll() is not None:
             break
         if output:
@@ -60,8 +58,6 @@ def parse_workspaces():
             for desktop in monitor_json["desktops"]:
                 workspace = desktop['name']
                 local_clients = []
-
-                focused_node_id = desktop["focusedNodeId"]
 
                 if desktop['id'] == focused_desktop_id:
                     current_workspace = workspace
@@ -113,7 +109,7 @@ def parse_workspaces():
 
             clients[i] = {
                 "name": monitor_name,
-                "title": title,
+                "title": title.strip(),
                 "icons": [icons[i] for i in sorted(icons.keys())],
             }
 
